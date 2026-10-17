@@ -33,6 +33,7 @@ class TornadoJitLLMTest {
             throw new IllegalArgumentException("The specified model file does not exist: " + modelPath.toAbsolutePath());
         }
 
+        LOGGER.info("");
         LOGGER.info(ORANGE + "Question: " + QUESTION + RESET);
 
         try (JitLLMChatModel model = JitLLMChatModel.builder()
@@ -45,7 +46,9 @@ class TornadoJitLLMTest {
 
             String answer = model.chat(QUESTION);
 
+            LOGGER.info("");
             LOGGER.info(ORANGE + "Answer: {}" + RESET, answer);
+            LOGGER.info("");
         }
     }
 }
