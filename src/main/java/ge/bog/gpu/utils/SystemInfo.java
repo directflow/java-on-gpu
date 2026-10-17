@@ -17,7 +17,7 @@ public final class SystemInfo {
     private SystemInfo() {
     }
 
-    public static List<String> environment(long size, int chunk, int chunks, int warmup, String simd) {
+    public static List<String> environment(long size, String simd) {
         Runtime rt = Runtime.getRuntime();
         List<String> lines = new ArrayList<>();
 
@@ -28,11 +28,9 @@ public final class SystemInfo {
         lines.add(String.format("OS:      %s %s (%s)",
                 System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch")));
         lines.add(String.format("JVM:     %s %s", System.getProperty("java.vm.name"), System.getProperty("java.version")));
-        lines.add(String.format("Params:  size=%,d | chunk=%,d | chunks=%,d | warmup=%d", size, chunk, chunks, warmup));
+        lines.add(String.format("Params:  size=%,d", size));
         return lines;
     }
-
-    // ------------------------------------------------------------------ CPU
 
     public static String cpuModel() {
         String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
@@ -74,7 +72,6 @@ public final class SystemInfo {
                 }
             }
         } catch (Exception ignored) {
-            // fall through to lscpu
         }
         String out = run("lscpu");
         if (out != null) {
@@ -106,7 +103,6 @@ public final class SystemInfo {
                 }
             }
         } catch (Throwable ignored) {
-            // no more devices, or TornadoVM runtime not initialised
         }
 
         if (lines.isEmpty()) {

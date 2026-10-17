@@ -28,7 +28,13 @@ Use your own model path via `-Dmodel=<path>`, e.g. `-Dmodel=/Users/zura/Download
 ### Vector multiplication benchmark
 
 ```bash
-mvn clean -Dtest=TornadoVecMulTest#vecMulBenchmarkTest -Dstyle.color=always -Dsize=10000000000 -Duse.tornadovm=false test
+mvn clean -Dtest=TornadoVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Duse.tornadovm=false test
+```
+
+### Vector multiplication benchmark
+
+```bash
+mvn clean -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.color=always -Dsize=10000000000 -Duse.tornadovm=false test
 ```
 
 ### JIT LLM question and answer
