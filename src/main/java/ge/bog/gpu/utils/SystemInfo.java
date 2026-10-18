@@ -1,5 +1,9 @@
 package ge.bog.gpu.utils;
 
+import jdk.incubator.vector.FloatVector;
+import jdk.incubator.vector.VectorSpecies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.ac.manchester.tornado.api.TornadoExecutionPlan;
 
 import java.nio.file.Files;
@@ -11,7 +15,19 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static ge.bog.gpu.utils.Color.*;
+import static ge.bog.gpu.utils.Color.CYAN;
+import static ge.bog.gpu.utils.Color.ORANGE;
+import static ge.bog.gpu.utils.Color.RESET;
+
 public final class SystemInfo {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SystemInfo.class);
+
+    private static final VectorSpecies<Float> SPECIES = FloatVector.SPECIES_PREFERRED;
+
+    private static final double HEAP_BUDGET_RATIO = 0.6;
+    private static final int HOST_ARRAYS = 3;
 
     private static final int MAX_BACKENDS = 8;
     private static final int MAX_DEVICES = 16;
@@ -243,5 +259,41 @@ public final class SystemInfo {
 
     private static boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+
+    public static void printEnvironment(long size, int chunk, long chunks) {
+        LOGGER.info("");
+        LOGGER.info(YELLOW + "========== ENVIRONMENT ==========" + RESET);
+        SystemInfo.environment(size, SPECIES.toString())
+                .forEach(line -> LOGGER.info(YELLOW + line + RESET));
+        LOGGER.info(YELLOW + String.format("Chunk:   %,d floats | executions: %,d", chunk, chunks) + RESET);
+        LOGGER.info(YELLOW + "=================================" + RESET);
+    }
+
+    public static void report(long kernelNs, long endToEndNs, String title) {
+        LOGGER.info("");
+        LOGGER.info(ORANGE + "========== " + title + " ==========" + RESET);
+        line("Kernel only", kernelNs);
+        line("End-to-end", endToEndNs);
+
+        LOGGER.info(ORANGE + "===============================" + RESET);
+    }
+
+    public static void line(String name, long ns) {
+        LOGGER.info(String.format(CYAN + "%-21s total %,10.3f s" + RESET, name, ns / 1e9));
+    }
+
+    public static int fitChunkToHeap(int requested) {
+        long budget = (long) (Runtime.getRuntime().maxMemory() * HEAP_BUDGET_RATIO);
+        long maxChunk = budget / ((long) HOST_ARRAYS * Float.BYTES);
+        int chunk = (int) Math.min(requested, Math.min(maxChunk, Integer.MAX_VALUE - 8));
+        if (chunk < 1) {
+            throw new IllegalStateException("Heap too small, increase -Xmx");
+        }
+        if (chunk < requested) {
+            LOGGER.warn("Chunk reduced from {} to {} to fit heap", requested, chunk);
+        }
+        return chunk;
     }
 }

@@ -1,81 +1,86 @@
 package tornado;
 
+import ge.bog.gpu.utils.SystemInfo;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.ac.manchester.tornado.api.ImmutableTaskGraph;
 import uk.ac.manchester.tornado.api.TaskGraph;
 import uk.ac.manchester.tornado.api.TornadoExecutionPlan;
+import uk.ac.manchester.tornado.api.TornadoExecutionResult;
 import uk.ac.manchester.tornado.api.annotations.Parallel;
 import uk.ac.manchester.tornado.api.enums.DataTransferMode;
+import uk.ac.manchester.tornado.api.enums.ProfilerMode;
 import uk.ac.manchester.tornado.api.exceptions.TornadoExecutionPlanException;
+import uk.ac.manchester.tornado.api.types.arrays.FloatArray;
 
-import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
-
-import static ge.bog.gpu.utils.Color.*;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TornadoVecMulTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TornadoVecMulTest.class);
-
-    private static void vecMul(float[] a, float[] b, float[] c) {
-        for (@Parallel int i = 0; i < c.length; i++) {
-            c[i] = a[i] * b[i];
+    private static void vecMul(FloatArray a, FloatArray b, FloatArray c) {
+        for (@Parallel int i = 0; i < c.getSize(); i++) {
+            c.set(i, a.get(i) * b.get(i));
         }
     }
 
     @Test
     void vecMulTest() throws TornadoExecutionPlanException {
-        int size = Objects.requireNonNullElse(Integer.getInteger("size"), 1000_000);
+        long size = Long.getLong("size", 1_000_000L);
 
         if (size <= 0) {
             throw new IllegalArgumentException("Vector size must be positive");
         }
 
-        float[] a = new float[size];
-        float[] b = new float[size];
-        float[] c = new float[size];
-        float[] expected = new float[size];
+        int chunk = (int) Math.min((long) Integer.getInteger("chunk", 1 << 26), size);
+        long chunks = Math.ceilDiv(size, (long) chunk);
 
-        for (int i = 0; i < size; i++) {
-            a[i] = i;
-            b[i] = 2.0f;
-            expected[i] = a[i] * b[i];
+        SystemInfo.printEnvironment(size, chunk, chunks);
+
+        FloatArray a = new FloatArray(chunk);
+        FloatArray b = new FloatArray(chunk);
+        FloatArray c = new FloatArray(chunk);
+
+        for (int i = 0; i < chunk; i++) {
+            a.set(i, i);
+            b.set(i, 2.0f);
         }
 
-        TaskGraph taskGraph = new TaskGraph("vecmul")
+        TaskGraph taskGraph = new TaskGraph("vecMulTaskGraph")
                 .transferToDevice(DataTransferMode.FIRST_EXECUTION, a, b)
-                .task("multiply", TornadoVecMulTest::vecMul, a, b, c)
+                .task("vecMul", TornadoVecMulTest::vecMul, a, b, c)
                 .transferToHost(DataTransferMode.EVERY_EXECUTION, c);
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
 
+        long executeNs = 0;
+        long kernelNs = 0;
         try (TornadoExecutionPlan plan = new TornadoExecutionPlan(immutableTaskGraph)) {
-            plan.execute();
-        }
+            plan.withProfiler(ProfilerMode.SILENT);
 
-        for (int i = 0; i < size; i++) {
-            if (c[i] != a[i] * b[i]) {
-                throw new AssertionError("Mismatch at index " + i);
+            for (long k = 0; k < chunks; k++) {
+                long t = System.nanoTime();
+                TornadoExecutionResult result = plan.execute();
+                executeNs += System.nanoTime() - t;
+                kernelNs += result.getProfilerResult().getDeviceKernelTime();
+
+                if (k == 0) {
+                    for (int i = 0; i < chunk; i++) {
+                        check(a, b, c, i);
+                    }
+                } else {
+                    check(a, b, c, 0);
+                    check(a, b, c, chunk - 1);
+                    check(a, b, c, ThreadLocalRandom.current().nextInt(chunk));
+                }
             }
         }
 
-        int idx = ThreadLocalRandom.current().nextInt(size);
+        SystemInfo.report(kernelNs, executeNs, "GPU (TornadoVM)");
+    }
 
-        assertArrayEquals(expected, c, 0.0f, "GPU result differs from CPU result");
-
-        assertEquals(a[idx] * b[idx], c[idx], 0.0f, "Mismatch at index " + idx);
-
-        assertEquals(0.0f, c[0], 0.0f, "First element");
-        assertEquals(2.0f * (size - 1), c[size - 1], 0.0f, "Last element");
-
-        LOGGER.info("");
-        LOGGER.info(CYAN + "========== Result ==========" + RESET);
-        LOGGER.info(CYAN + "OK: c[{}] = {} (expected {})" + RESET, idx, c[idx], a[idx] * b[idx]);
-        LOGGER.info(CYAN + "=================================" + RESET);
-        LOGGER.info("");
+    private static void check(FloatArray a, FloatArray b, FloatArray c, int i) {
+        float expected = a.get(i) * b.get(i);
+        if (c.get(i) != expected) {
+            throw new AssertionError("Mismatch at index " + i + ": expected " + expected + " but was " + c.get(i));
+        }
     }
 }

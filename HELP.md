@@ -25,15 +25,29 @@ set PATH=%TORNADOVM_HOME%\bin;%PATH%
 
 Use your own model path via `-Dmodel=<path>`, e.g. `-Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf`.
 
-### Vector multiplication CPU
+
+### CPU Vector multiplication
 
 ```bash
-mvn clean test -Dtest=TornadoVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dchunk=16384 -Dextra.jvm.flags="-XX:-UseSuperWord" -Dtornado.device.memory=8GB -Duse.tornadovm=true
+mvn clean test -Dtest=CpuVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dchunk=16384
 ```
-### Vector multiplication GPU
+
+### VectorAPI Vector multiplication
+
+```bash
+mvn clean test -Dtest=VectorApiVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dchunk=16384 -Dextra.jvm.flags="-XX:-UseSuperWord"
+```
+
+### TornadoVM Vector multiplication
 
 ```bash
 mvn clean test -Dtest=TornadoVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dtornado.device.memory=8GB -Duse.tornadovm=true
+```
+
+### TornadoVM Vector multiplication wrong
+
+```bash
+mvn clean test -Dtest=TornadoVecMulWrongTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dtornado.device.memory=8GB -Duse.tornadovm=true
 ```
 
 ### JIT LLM question and answer
