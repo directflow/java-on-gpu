@@ -25,16 +25,10 @@ set PATH=%TORNADOVM_HOME%\bin;%PATH%
 
 Use your own model path via `-Dmodel=<path>`, e.g. `-Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf`.
 
-### Vector multiplication benchmark
+### Vector multiplication
 
 ```bash
 mvn clean -Dtest=TornadoVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Duse.tornadovm=false test
-```
-
-### Vector multiplication benchmark
-
-```bash
-mvn clean -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.color=always -Dsize=10000000000 -Duse.tornadovm=false test
 ```
 
 ### JIT LLM question and answer
@@ -43,13 +37,20 @@ mvn clean -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.color=al
 mvn clean -Dtest=TornadoJitLLMTest#questionAndAnswerTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Duse.tornadovm=false test
 ```
 
+### Vector multiplication benchmark
+
+```bash
+mvn clean -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.color=always -Dsize=10000000000 -Duse.tornadovm=false test
+```
+
 ### Fraud scoring
 
 ```bash
 mvn clean -Dtest=TornadoFraudScoringTest#fraudScoringPositiveTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Dfraud=true -Duse.tornadovm=false test
 ```
 
-### Fraud alert explainer
+### Fraud scoring
 
 ```bash
-mvn clean -Dtest=TornadoFraudAlertExplainerTest#explai
+mvn clean -Dtest=TornadoFraudAlertExplainerTest#explainsAlertTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Dfraud=true -Duse.tornadovm=false test
+```
