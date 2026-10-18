@@ -79,3 +79,10 @@ mvn clean test -Dtest=TornadoFraudScoringTest#fraudScoringPositiveTest -Dstyle.c
 ```bash
 mvn clean test -Dtest=TornadoFraudAlertExplainerTest#explainsAlertTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=8GB -Dfraud=true -Duse.tornadovm=true
 ```
+
+
+### Babylon Vector multiplication
+
+```bash
+mvn clean test -Dtest=BabylonVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dchunk=16384
+```

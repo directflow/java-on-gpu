@@ -10,6 +10,7 @@
         <maven.compiler.release>28</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <extra.jvm.flags></extra.jvm.flags>
+        <hat.build.dir>${user.home}/babylon/hat/build</hat.build.dir>
     </properties>
     <dependencies>
         <dependency>
@@ -43,6 +44,27 @@
             <version>6.1.3</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>hat</groupId>
+            <artifactId>hat-core</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>hat</groupId>
+            <artifactId>hat-optkl</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>hat</groupId>
+            <artifactId>hat-backend-ffi-shared</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>hat</groupId>
+            <artifactId>hat-backend-ffi-opencl</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>java-on-gpu</finalName>
@@ -56,6 +78,9 @@
                     <compilerArgs>
                         <arg>--add-modules</arg>
                         <arg>jdk.incubator.vector</arg>
+                        <arg>--add-modules</arg>
+                        <arg>jdk.incubator.code</arg>
+                        <arg>--enable-preview</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
@@ -66,7 +91,12 @@
                 <configuration>
                     <enableAssertions>false</enableAssertions>
                     <argLine>
+                        --enable-preview
                         --add-modules=jdk.incubator.vector
+                        --add-modules=jdk.incubator.code
+                        --enable-native-access=ALL-UNNAMED
+                        --add-exports=java.base/jdk.internal=ALL-UNNAMED
+                        -Djava.library.path=${hat.build.dir}
                         --sun-misc-unsafe-memory-access=allow
                         -Xms8g
                         -Xmx8g
