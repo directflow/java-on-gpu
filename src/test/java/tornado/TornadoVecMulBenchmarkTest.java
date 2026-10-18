@@ -14,6 +14,7 @@ import uk.ac.manchester.tornado.api.annotations.Parallel;
 import uk.ac.manchester.tornado.api.enums.DataTransferMode;
 import uk.ac.manchester.tornado.api.enums.ProfilerMode;
 import uk.ac.manchester.tornado.api.exceptions.TornadoExecutionPlanException;
+import uk.ac.manchester.tornado.api.types.arrays.FloatArray;
 
 import java.util.Objects;
 
@@ -113,11 +114,59 @@ class TornadoVecMulBenchmarkTest {
             }
         }
 
-        report(java, vector, gpuTotal, gpuKernel);
+        Samples gpuOptTotal = new Samples(chunks);
+        Samples gpuOptKernel = new Samples(chunks);
+        maxError = Math.max(maxError, runResident(chunk, chunks, gpuOptTotal, gpuOptKernel));
+
+        report(java, vector, gpuTotal, gpuKernel, gpuOptTotal, gpuOptKernel);
 
         if (maxError > TOLERANCE) {
             throw new AssertionError("Results diverge, max abs error = " + maxError);
         }
+    }
+
+    private static double runResident(int chunk, int chunks, Samples total, Samples kernel)
+            throws TornadoExecutionPlanException {
+        float[] a = new float[chunk];
+        float[] b = new float[chunk];
+        float[] ref = new float[chunk];
+        fill(a, b, 0);
+        multiplyJava(a, b, ref);
+
+        FloatArray fa = new FloatArray(chunk);
+        FloatArray fb = new FloatArray(chunk);
+        FloatArray fc = new FloatArray(chunk);
+        for (int i = 0; i < chunk; i++) {
+            fa.set(i, a[i]);
+            fb.set(i, b[i]);
+        }
+
+        TaskGraph taskGraph = new TaskGraph("vecmulResident")
+                .transferToDevice(DataTransferMode.FIRST_EXECUTION, fa, fb)
+                .task("multiply", TornadoVecMulBenchmarkTest::multiplyTornadoResident, fa, fb, fc)
+                .transferToHost(DataTransferMode.FIRST_EXECUTION, fc);
+        ImmutableTaskGraph immutable = taskGraph.snapshot();
+
+        double error = 0;
+        try (TornadoExecutionPlan plan = new TornadoExecutionPlan(immutable)) {
+            plan.withProfiler(ProfilerMode.SILENT);
+
+            for (int i = 0; i < Math.max(1, WARMUP_ITERATIONS); i++) {
+                plan.execute();
+            }
+
+            for (int i = 0; i < chunk; i++) {
+                error = Math.max(error, Math.abs(ref[i] - fc.get(i)));
+            }
+
+            for (int k = 0; k < chunks; k++) {
+                long t = System.nanoTime();
+                TornadoExecutionResult result = plan.execute();
+                total.add(System.nanoTime() - t);
+                kernel.add(result.getProfilerResult().getDeviceKernelTime());
+            }
+        }
+        return error;
     }
 
     private static void printEnvironment(long size) {
@@ -157,7 +206,8 @@ class TornadoVecMulBenchmarkTest {
         return m;
     }
 
-    private static void report(Samples java, Samples vector, Samples gpuTotal, Samples gpuKernel) {
+    private static void report(Samples java, Samples vector, Samples gpuTotal, Samples gpuKernel,
+                               Samples gpuOptTotal, Samples gpuOptKernel) {
         LOGGER.info("");
 
         LOGGER.info(CYAN + "========== CPU ==========" + RESET);
@@ -166,14 +216,22 @@ class TornadoVecMulBenchmarkTest {
 
         LOGGER.info("");
 
-        LOGGER.info(GREEN + "========== GPU (TornadoVM) ==========" + RESET);
-        line(GREEN, "GPU kernel only", gpuKernel);
-        line(GREEN, "GPU end-to-end", gpuTotal);
+        gpuBlock("GPU (TornadoVM)", gpuKernel, gpuTotal);
 
-        double overheadSec = (gpuTotal.sum() - gpuKernel.sum()) / 1e9;
-        LOGGER.info(ORANGE + String.format("Transfer + launch overhead: %,.3f s (%.1f%% of end-to-end)",
-                overheadSec, 100.0 * (gpuTotal.sum() - gpuKernel.sum()) / gpuTotal.sum()) + RESET);
+        LOGGER.info("");
+
+        gpuBlock("GPU (TornadoVM optimized: FloatArray + FIRST_EXECUTION)", gpuOptKernel, gpuOptTotal);
         LOGGER.info(CYAN + "=====================================" + RESET);
+    }
+
+    private static void gpuBlock(String title, Samples kernel, Samples total) {
+        LOGGER.info(GREEN + "========== " + title + " ==========" + RESET);
+        line(GREEN, "GPU kernel only", kernel);
+        line(GREEN, "GPU end-to-end", total);
+
+        long overheadNs = total.sum() - kernel.sum();
+        LOGGER.info(ORANGE + String.format("Transfer + launch overhead: %,.3f s (%.1f%% of end-to-end)",
+                overheadNs / 1e9, 100.0 * overheadNs / total.sum()) + RESET);
     }
 
     private static void line(String color, String name, Samples s) {
@@ -203,6 +261,12 @@ class TornadoVecMulBenchmarkTest {
     private static void multiplyTornado(float[] a, float[] b, float[] c) {
         for (@Parallel int i = 0; i < a.length; i++) {
             c[i] = a[i] * b[i];
+        }
+    }
+
+    private static void multiplyTornadoResident(FloatArray a, FloatArray b, FloatArray c) {
+        for (@Parallel int i = 0; i < c.getSize(); i++) {
+            c.set(i, a.get(i) * b.get(i));
         }
     }
 }

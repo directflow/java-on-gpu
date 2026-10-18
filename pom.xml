@@ -9,6 +9,7 @@
         <java.version>28</java.version>
         <maven.compiler.release>28</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <extra.jvm.flags></extra.jvm.flags>
     </properties>
     <dependencies>
         <dependency>
@@ -70,6 +71,7 @@
                         -Xms8g
                         -Xmx8g
                         @${env.TORNADOVM_HOME}/tornado-argfile
+                        ${extra.jvm.flags}
                     </argLine>
                     <useSystemClassLoader>true</useSystemClassLoader>
                     <useManifestOnlyJar>false</useManifestOnlyJar>

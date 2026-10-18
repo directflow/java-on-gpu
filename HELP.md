@@ -25,32 +25,43 @@ set PATH=%TORNADOVM_HOME%\bin;%PATH%
 
 Use your own model path via `-Dmodel=<path>`, e.g. `-Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf`.
 
-### Vector multiplication
+### Vector multiplication CPU
 
 ```bash
-mvn clean -Dtest=TornadoVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Duse.tornadovm=false test
+mvn clean test -Dtest=TornadoVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dchunk=16384 -Dextra.jvm.flags="-XX:-UseSuperWord" -Dtornado.device.memory=8GB -Duse.tornadovm=true
+```
+### Vector multiplication GPU
+
+```bash
+mvn clean test -Dtest=TornadoVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dtornado.device.memory=8GB -Duse.tornadovm=true
 ```
 
 ### JIT LLM question and answer
 
 ```bash
-mvn clean -Dtest=TornadoJitLLMTest#questionAndAnswerTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Duse.tornadovm=false test
+mvn clean test -Dtest=TornadoJitLLMTest#questionAndAnswerTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=8GB -Duse.tornadovm=true
 ```
 
-### Vector multiplication benchmark
+### Vector multiplication benchmark CPU
 
 ```bash
-mvn clean -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.color=always -Dsize=10000000000 -Duse.tornadovm=false test
+mvn clean test -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.color=always -Dsize=10000000000 -Dchunk=16384 -Dextra.jvm.flags="-XX:-UseSuperWord" -Dtornado.device.memory=8GB -Duse.tornadovm=true
+```
+
+### Vector multiplication benchmark GPU
+
+```bash
+mvn clean test -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.color=always -Dsize=10000000000 -Dtornado.device.memory=8GB -Duse.tornadovm=true
 ```
 
 ### Fraud scoring
 
 ```bash
-mvn clean -Dtest=TornadoFraudScoringTest#fraudScoringPositiveTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Dfraud=true -Duse.tornadovm=false test
+mvn clean test -Dtest=TornadoFraudScoringTest#fraudScoringPositiveTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=8GB -Dfraud=true -Duse.tornadovm=true
 ```
 
-### Fraud scoring
+### Alert explainer
 
 ```bash
-mvn clean -Dtest=TornadoFraudAlertExplainerTest#explainsAlertTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Dfraud=true -Duse.tornadovm=false test
+mvn clean test -Dtest=TornadoFraudAlertExplainerTest#explainsAlertTest -Dstyle.color=always -Dmodel=/Users/zura/Downloads/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=8GB -Dfraud=true -Duse.tornadovm=true
 ```
