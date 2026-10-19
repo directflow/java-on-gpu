@@ -2,6 +2,7 @@ package ge.bog.gpu.babylon;
 
 import ge.bog.gpu.utils.SystemInfo;
 import hat.Accelerator;
+import hat.Accelerator.Compute;
 import hat.ComputeContext;
 import hat.KernelContext;
 import hat.NDRange;
@@ -29,7 +30,7 @@ public class BabylonVecMul {
         cc.dispatchKernel(NDRange.of1D(global, LOCAL_SIZE), () -> vecMulKernel(a, b, c));
     }
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         long size = Long.getLong("size", 1_000_000L);
 
         if (size <= 0) {
@@ -59,7 +60,7 @@ public class BabylonVecMul {
 
         for (long k = 0; k < chunks; k++) {
             long t = System.nanoTime();
-            accelerator.compute(cc -> vecMul(cc, a, b, c, global));
+            accelerator.compute((@Reflect Compute) cc -> vecMul(cc, a, b, c, global));
             executeNs += System.nanoTime() - t;
 
             if (k == 0) {
