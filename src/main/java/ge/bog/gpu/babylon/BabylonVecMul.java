@@ -31,7 +31,7 @@ public class BabylonVecMul {
     }
 
     public static void main(String[] args) {
-        long size = Long.getLong("size", 1_000_000L);
+        long size = Long.getLong("size", 10000000000L);
 
         if (size <= 0) {
             throw new IllegalArgumentException("Vector size must be positive");
