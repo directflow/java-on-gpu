@@ -53,7 +53,7 @@ mvn clean test -Dtest=TornadoVecMulWrongTest#vecMulTest -Dstyle.color=always -Ds
 ### JIT LLM question and answer
 
 ```bash
-mvn clean test -Dtest=TornadoJitLLMTest#questionAndAnswerTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Duse.tornadovm=true
+mvn clean test -Dtest=TornadoJitLLMTest#questionAndAnswerTest -Dstyle.color=always -Dpreview.flag= -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Duse.tornadovm=true
 ```
 
 ### Vector multiplication benchmark CPU
@@ -71,13 +71,13 @@ mvn clean test -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.col
 ### Fraud scoring
 
 ```bash
-mvn clean test -Dtest=TornadoFraudScoringTest#fraudScoringPositiveTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Dfraud=true -Duse.tornadovm=true
+mvn clean test -Dtest=TornadoFraudScoringTest#fraudScoringPositiveTest -Dstyle.color=always -Dpreview.flag= -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Dfraud=true -Duse.tornadovm=true
 ```
 
 ### Alert explainer
 
 ```bash
-mvn clean test -Dtest=TornadoFraudAlertExplainerTest#explainsAlertTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Dfraud=true -Duse.tornadovm=true
+mvn clean test -Dtest=TornadoFraudAlertExplainerTest#explainsAlertTest -Dstyle.color=always -Dpreview.flag= -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Dfraud=true -Duse.tornadovm=true
 ```
 
 
