@@ -23,7 +23,7 @@ export PATH=$TORNADOVM_HOME/bin:$PATH
 
 ## Running tests
 
-Use your own model path via `-Dmodel=<path>`, e.g. `-Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf`.
+Use your own model path via `-Dmodel=<path>`, e.g. `-Dmodel=$HOME/models/Qwen3-1.7B-Q8_0.gguf`.
 
 
 ### CPU Vector multiplication
@@ -53,19 +53,19 @@ mvn clean test -Dtest=TornadoVecMulWrongTest#vecMulTest -Dstyle.color=always -Ds
 ### JIT LLM question and answer
 
 ```bash
-mvn clean test -Dtest=TornadoJitLLMTest#questionAndAnswerTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Duse.tornadovm=true
+mvn clean test -Dtest=TornadoJitLLMTest#questionAndAnswerTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-1.7B-Q8_0.gguf -Dtornado.device.memory=16GB -Duse.tornadovm=true
 ```
 
 ### Fraud scoring
 
 ```bash
-mvn clean test -Dtest=TornadoFraudScoringTest#fraudScoringPositiveTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Dfraud=true -Duse.tornadovm=true
+mvn clean test -Dtest=TornadoFraudScoringTest#fraudScoringPositiveTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-1.7B-Q8_0.gguf -Dtornado.device.memory=16GB -Dfraud=true -Duse.tornadovm=true
 ```
 
 ### Alert explainer
 
 ```bash
-mvn clean test -Dtest=TornadoFraudAlertExplainerTest#explainsAlertTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Dfraud=true -Duse.tornadovm=true
+mvn clean test -Dtest=TornadoFraudAlertExplainerTest#explainsAlertTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-1.7B-Q8_0.gguf -Dtornado.device.memory=16GB -Dfraud=true -Duse.tornadovm=true
 ```
 
 
