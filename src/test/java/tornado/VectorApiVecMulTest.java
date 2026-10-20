@@ -1,76 +1,79 @@
 package tornado;
 
+import ge.bog.gpu.utils.MemoryTracker;
 import ge.bog.gpu.utils.SystemInfo;
 import jdk.incubator.vector.FloatVector;
 import jdk.incubator.vector.VectorSpecies;
 import org.junit.jupiter.api.Test;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.nio.ByteOrder;
+
 class VectorApiVecMulTest {
 
+    private static final long SIZE = 5_000_000_000L;
+
     private static final VectorSpecies<Float> SPECIES = FloatVector.SPECIES_PREFERRED;
-    private static final int STEP = SPECIES.length();
 
-    private static final int WARMUP_ITERATIONS = Integer.getInteger("warmup", 10);
+    private static final ByteOrder ORDER = ByteOrder.nativeOrder();
 
-    private static void vecMul(float[] a, float[] b, float[] c) {
-        int i = 0;
-        int upperBound = SPECIES.loopBound(c.length);
-        for (; i < upperBound; i += STEP) {
-            FloatVector.fromArray(SPECIES, a, i)
-                    .mul(FloatVector.fromArray(SPECIES, b, i))
-                    .intoArray(c, i);
+    private static void vecMul(MemorySegment a, MemorySegment b, MemorySegment c) {
+        long i = 0;
+        int width = SPECIES.length();
+        long bound = SIZE - SIZE % width;
+
+        for (; i < bound; i += width) {
+            long byteOffset = i * Float.BYTES;
+
+            FloatVector va = FloatVector.fromMemorySegment(SPECIES, a, byteOffset, ORDER);
+            FloatVector vb = FloatVector.fromMemorySegment(SPECIES, b, byteOffset, ORDER);
+
+            va.mul(vb).intoMemorySegment(c, byteOffset, ORDER);
         }
-        for (; i < c.length; i++) {
-            c[i] = a[i] * b[i];
+
+        for (; i < SIZE; i++) {
+            long offset = i * Float.BYTES;
+
+            float x = a.get(ValueLayout.JAVA_FLOAT, offset);
+            float y = b.get(ValueLayout.JAVA_FLOAT, offset);
+
+            c.set(ValueLayout.JAVA_FLOAT, offset, x * y);
         }
     }
 
     @Test
     void vecMulTest() {
-        long size = Long.getLong("size", 1_000_000L);
+        SystemInfo.printEnvironment(SIZE);
 
-        if (size <= 0) {
-            throw new IllegalArgumentException("Vector size must be positive");
-        }
+        long bytes = Math.multiplyExact(SIZE, Float.BYTES);
 
-        int requested = (int) Math.min((long) Integer.getInteger("chunk", 1 << 26), size);
-        int chunk = SystemInfo.fitChunkToHeap(requested);
-        if (chunk >= STEP) {
-            chunk -= chunk % STEP;
-        }
-        long chunks = Math.ceilDiv(size, (long) chunk);
+        MemoryTracker.track(tracker -> {
+            try (Arena arena = Arena.ofConfined()) {
+                MemorySegment a = arena.allocate(bytes, 64);
+                MemorySegment b = arena.allocate(bytes, 64);
+                MemorySegment c = arena.allocate(bytes, 64);
 
-        SystemInfo.printEnvironment(size, chunk, chunks);
+                a.fill((byte) 0);
+                b.fill((byte) 0);
+                c.fill((byte) 0);
 
-        float[] a = new float[chunk];
-        float[] b = new float[chunk];
-        float[] c = new float[chunk];
+                a.set(ValueLayout.JAVA_FLOAT, 0, 2.0f);
+                b.set(ValueLayout.JAVA_FLOAT, 0, 3.0f);
 
-        for (int i = 0; i < chunk; i++) {
-            a[i] = i;
-            b[i] = 2.0f;
-        }
+                vecMul(a, b, c);
 
-        for (int i = 0; i < Math.max(1, WARMUP_ITERATIONS); i++) {
-            vecMul(a, b, c);
-        }
+                long start = System.nanoTime();
 
-        long kernelNs = 0;
-        long start = System.nanoTime();
-        for (long k = 0; k < chunks; k++) {
-            long t = System.nanoTime();
-            vecMul(a, b, c);
-            kernelNs += System.nanoTime() - t;
-        }
-        long endToEndNs = System.nanoTime() - start;
+                vecMul(a, b, c);
 
-        for (int i = 0; i < chunk; i++) {
-            float expected = a[i] * b[i];
-            if (c[i] != expected) {
-                throw new AssertionError("Mismatch at index " + i + ": expected " + expected + " but was " + c[i]);
+                tracker.mark();
+
+                long elapsedNs = System.nanoTime() - start;
+
+                SystemInfo.report(elapsedNs, "CPU Vector API");
             }
-        }
-
-        SystemInfo.report(kernelNs, endToEndNs, "VectorAPI");
+        });
     }
 }

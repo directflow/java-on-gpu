@@ -261,6 +261,21 @@ public final class SystemInfo {
         return s == null || s.isBlank();
     }
 
+    public static void printEnvironment(long size) {
+        LOGGER.info("");
+        LOGGER.info(YELLOW + "========== ENVIRONMENT ==========" + RESET);
+        SystemInfo.environment(size, SPECIES.toString())
+                .forEach(line -> LOGGER.info(YELLOW + line + RESET));
+        LOGGER.info(YELLOW + "=================================" + RESET);
+    }
+
+    public static void report(long endToEndNs, String title) {
+        LOGGER.info("");
+        LOGGER.info(ORANGE + "========== " + title + " ==========" + RESET);
+        line("End-to-end", endToEndNs);
+
+        LOGGER.info(ORANGE + "====================================" + RESET);
+    }
 
     public static void printEnvironment(long size, int chunk, long chunks) {
         LOGGER.info("");
@@ -277,23 +292,10 @@ public final class SystemInfo {
         line("Kernel only", kernelNs);
         line("End-to-end", endToEndNs);
 
-        LOGGER.info(ORANGE + "===============================" + RESET);
+        LOGGER.info(ORANGE + "====================================" + RESET);
     }
 
     public static void line(String name, long ns) {
         LOGGER.info(String.format(CYAN + "%-21s total %,10.3f s" + RESET, name, ns / 1e9));
-    }
-
-    public static int fitChunkToHeap(int requested) {
-        long budget = (long) (Runtime.getRuntime().maxMemory() * HEAP_BUDGET_RATIO);
-        long maxChunk = budget / ((long) HOST_ARRAYS * Float.BYTES);
-        int chunk = (int) Math.min(requested, Math.min(maxChunk, Integer.MAX_VALUE - 8));
-        if (chunk < 1) {
-            throw new IllegalStateException("Heap too small, increase -Xmx");
-        }
-        if (chunk < requested) {
-            LOGGER.warn("Chunk reduced from {} to {} to fit heap", requested, chunk);
-        }
-        return chunk;
     }
 }

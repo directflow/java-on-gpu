@@ -29,26 +29,28 @@ Use your own model path via `-Dmodel=<path>`, e.g. `-Dmodel=/Users/zura/Download
 ### CPU Vector multiplication
 
 ```bash
-mvn clean test -Dtest=CpuVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dchunk=16384
+mvn clean test -Dtest=CpuVecMulTest#vecMulTest -Dstyle.color=always -Dextra.jvm.flags="-Xmx13g"
 ```
 
 ### VectorAPI Vector multiplication
 
 ```bash
-mvn clean test -Dtest=VectorApiVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dchunk=16384 -Dextra.jvm.flags="-XX:-UseSuperWord"
+mvn clean test -Dtest=VectorApiVecMulTest#vecMulTest -Dstyle.color=always
 ```
 
 ### TornadoVM Vector multiplication
 
 ```bash
-mvn clean test -Dtest=TornadoVecMulTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dtornado.device.memory=8GB -Duse.tornadovm=true
+mvn clean test -Dtest=TornadoVecMulTest#vecMulTest -Dstyle.color=always -Dtornado.device.memory=18GB -Duse.tornadovm=true -Dextra.jvm.flags="-XX:MaxDirectMemorySize=18g"
 ```
 
-### TornadoVM Vector multiplication wrong
 
-```bash
-mvn clean test -Dtest=TornadoVecMulWrongTest#vecMulTest -Dstyle.color=always -Dsize=10000000000 -Dtornado.device.memory=8GB -Duse.tornadovm=true
-```
+
+
+
+
+
+
 
 ### JIT LLM question and answer
 
