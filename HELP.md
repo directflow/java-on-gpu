@@ -81,25 +81,7 @@ mvn clean test -Dtest=TornadoFraudAlertExplainerTest#explainsAlertTest -Dstyle.c
 ```
 
 
-### Babylon Vector multiplication
 
-```bash
-H=~/babylon/hat/build
-CP=$(ls $H/hat-*.jar | grep -v example | tr '\n' ':')
-M=$(find ~/.m2 \( -name "slf4j-api-2.0.20.jar" -o -name "tornado-api-7.3.1-jdk22plus.jar" -o -name "logback-classic-1.6.5.jar" -o -name "logback-core-1.6.5.jar" \) | tr '\n' ':')
-R=$(java -version 2>&1 | head -1 | sed -E 's/[^"]*"([0-9]+).*/\1/')
-```
-
-```bash
-javac --enable-preview --release $R --add-modules jdk.incubator.code -cp "$CP:$M" \
-  -sourcepath src/main/java -d out \
-  src/main/java/ge/bog/gpu/babylon/BabylonVecMul.java
-```
-
-```bash
-HAT=INFO java --enable-preview --add-modules jdk.incubator.code --enable-native-access=ALL-UNNAMED \
-  -Djava.library.path=$H -Dsize=1000000 -cp "out:$CP:$M" ge.bog.gpu.babylon.BabylonVecMul
-```
 
 ### Babylon Vector multiplication oracle
 
@@ -118,4 +100,21 @@ javac --enable-preview --release $R --add-modules jdk.incubator.code,jdk.incubat
 && HAT=INFO java --enable-preview --add-modules jdk.incubator.code,jdk.incubator.vector \
   --enable-native-access=ALL-UNNAMED \
   -Djava.library.path=$H -Dsize=10000000000 -cp "out:$CP:$M" ge.bog.gpu.babylon.BabylonVecMul
+```
+
+### Babylon Vector multiplication oracle with report report
+
+```bash
+nsys profile --stats=false -o hat_vecmul --force-overwrite true java --enable-preview --add-modules jdk.incubator.code,jdk.incubator.vector --enable-native-access=ALL-UNNAMED -Djava.library.path=$H -Dsize=100000000 -cp "out:$CP:$M" ge.bog.gpu.babylon.BabylonVecMul
+```
+
+```bash
+  nsys stats --report cuda_gpu_kern_sum,cuda_gpu_mem_time_sum --timeunit msec --force-export=true "${1:-hat_vecmul.nsys-rep}" 2>&1 |
+  sed -E \
+    -e 's/^( \*\*.*)$/\x1b[1;35m\1\x1b[0m/' \
+    -e 's/^( *Time \(%\).*)$/\x1b[1m\1\x1b[0m/' \
+    -e 's/^(.*Host-to-Device.*)$/\x1b[33m\1\x1b[0m/' \
+    -e 's/^(.*Device-to-Host.*)$/\x1b[36m\1\x1b[0m/' \
+    -e 's/^( +[0-9.]+ .*)$/\x1b[1;32m\1\x1b[0m/' \
+    -e 's/^(Processing.*|NOTICE.*|WARNING.*|Generating.*)$/\x1b[2m\1\x1b[0m/'
 ```
