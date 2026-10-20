@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>hat</groupId>
-            <artifactId>hat-backend-ffi-opencl</artifactId>
+            <artifactId>hat-backend-ffi-cuda</artifactId>
             <version>1.0</version>
         </dependency>
     </dependencies>
