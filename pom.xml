@@ -11,6 +11,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <extra.jvm.flags></extra.jvm.flags>
         <hat.build.dir>${user.home}/babylon/hat/build</hat.build.dir>
+        <preview.flag>--enable-preview</preview.flag>
     </properties>
     <dependencies>
         <dependency>
@@ -91,7 +92,7 @@
                 <configuration>
                     <enableAssertions>false</enableAssertions>
                     <argLine>
-                        --enable-preview
+                        ${preview.flag}
                         --add-modules=jdk.incubator.vector
                         --add-modules=jdk.incubator.code
                         --enable-native-access=ALL-UNNAMED
