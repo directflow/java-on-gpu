@@ -56,18 +56,6 @@ mvn clean test -Dtest=TornadoVecMulWrongTest#vecMulTest -Dstyle.color=always -Ds
 mvn clean test -Dtest=TornadoJitLLMTest#questionAndAnswerTest -Dstyle.color=always -Dmodel=$HOME/models/Qwen3-0.6B-Q8_0.gguf -Dtornado.device.memory=16GB -Duse.tornadovm=true
 ```
 
-### Vector multiplication benchmark CPU
-
-```bash
-mvn clean test -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.color=always -Dsize=10000000000 -Dchunk=16384 -Dextra.jvm.flags="-XX:-UseSuperWord" -Dtornado.device.memory=16GB -Duse.tornadovm=true
-```
-
-### Vector multiplication benchmark GPU
-
-```bash
-mvn clean test -Dtest=TornadoVecMulBenchmarkTest#vecMulBenchmarkTest -Dstyle.color=always -Dsize=10000000000 -Dtornado.device.memory=16GB -Duse.tornadovm=true
-```
-
 ### Fraud scoring
 
 ```bash
