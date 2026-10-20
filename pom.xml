@@ -11,7 +11,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <extra.jvm.flags></extra.jvm.flags>
         <hat.build.dir>${user.home}/babylon/hat/build</hat.build.dir>
-        <preview.flag>--enable-preview</preview.flag>
     </properties>
     <dependencies>
         <dependency>
@@ -46,6 +45,7 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- HAT: used only by Babylon code, which is built and run manually with javac/java -->
         <dependency>
             <groupId>hat</groupId>
             <artifactId>hat-core</artifactId>
@@ -81,8 +81,14 @@
                         <arg>jdk.incubator.vector</arg>
                         <arg>--add-modules</arg>
                         <arg>jdk.incubator.code</arg>
-                        <arg>--enable-preview</arg>
                     </compilerArgs>
+                    <!-- Babylon/HAT needs preview; it is compiled and run manually, not by Maven -->
+                    <excludes>
+                        <exclude>ge/bog/gpu/babylon/**</exclude>
+                    </excludes>
+                    <testExcludes>
+                        <testExclude>babylon/**</testExclude>
+                    </testExcludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -92,12 +98,10 @@
                 <configuration>
                     <enableAssertions>false</enableAssertions>
                     <argLine>
-                        ${preview.flag}
                         --add-modules=jdk.incubator.vector
                         --add-modules=jdk.incubator.code
                         --enable-native-access=ALL-UNNAMED
                         --add-exports=java.base/jdk.internal=ALL-UNNAMED
-                        -Djava.library.path=${hat.build.dir}
                         --sun-misc-unsafe-memory-access=allow
                         -Xms8g
                         -Xmx8g
